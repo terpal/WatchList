@@ -29,6 +29,7 @@ public class form extends JFrame {
     private JButton ButtonEDIT;
     private JButton buttonExit;
     private JButton buttonImport;
+    private JButton buttonDelete;
     private JFileChooser jChooser;
     private String path;
 
@@ -49,6 +50,7 @@ public class form extends JFrame {
         ButtonEDIT.addActionListener(actionEvent -> onEdit());
         buttonExit.addActionListener(actionEvent -> onExit());
         buttonImport.addActionListener(actionEvent -> onImport());
+        buttonDelete.addActionListener(actionEvent -> onDelete());
 
         fillDefaultList();
     }
@@ -123,6 +125,15 @@ public class form extends JFrame {
     }
 
     /**
+     * Delete Button
+     */
+    private void onDelete(){
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        int deleteRow = table.getSelectedRow();
+        model.removeRow(deleteRow);
+    }
+
+    /**
      * Opens the Default excel file
      */
     private void fillDefaultList(){
@@ -135,7 +146,6 @@ public class form extends JFrame {
             tableHeight = model.getRowCount() * 25;
             table.setPreferredSize(new Dimension( tableWidth, tableHeight));
             table.setModel(model);
-
         }
     }
 
