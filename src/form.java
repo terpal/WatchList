@@ -9,26 +9,23 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.poifs.filesystem.NPOIFSFileSystem;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Vector;
-
 
 
 public class form extends JFrame {
     private JPanel contentPanel;
     private JTable table;
     private JTextField SEARCHTextField;
-    private JButton buttonOK;
+    private JButton buttonSave;
     private JButton ButtonEDIT;
     private JButton buttonExit;
     private JButton buttonImport;
@@ -48,14 +45,19 @@ public class form extends JFrame {
     public form() throws IOException {
         setContentPane(contentPanel);
 
-        buttonOK.addActionListener(actionEvent -> onAdd());
+        buttonSave.addActionListener(actionEvent -> onSave());
         ButtonEDIT.addActionListener(actionEvent -> onEdit());
         buttonExit.addActionListener(actionEvent -> onExit());
         buttonImport.addActionListener(actionEvent -> onImport());
+
+        fillDefaultList();
     }
 
-
-    public void onImport(){
+    /**
+     * Import Button
+     * User choose a excel file to import.
+     */
+    private void onImport(){
         jChooser = new JFileChooser();
         jChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
         jChooser.addChoosableFileFilter(new FileNameExtensionFilter("MS Office Documents", "xls", "xlsx"));
@@ -68,25 +70,161 @@ public class form extends JFrame {
             path = file.getAbsolutePath();
             fillData(file);
             model = new DefaultTableModel(data, headers);
-            tableWidth = model.getColumnCount() * 150;
-            tableHeight = model.getRowCount() * 25;
-            table.setPreferredSize(new Dimension( tableWidth, tableHeight));
             table.setModel(model);
         }
     }
 
-    public void onAdd(){
+    /**
+     * Save Button
+     */
+    private void onSave(){
+        new WorkbookFactory();
+        Workbook wb = new HSSFWorkbook();
+        Sheet sheet = wb.createSheet();
+        Row headerRow = sheet.createRow(0);
+        Row row = sheet.createRow(2);
+        TableModel model = table.getModel();
+
+        for(int headings = 0; headings < model.getColumnCount(); headings++){
+            headerRow.createCell(headings).setCellValue(model.getColumnName(headings));
+        }
+
+        for(int rows = 0; rows < model.getRowCount() -1; rows++){
+            for(int cols = 0; cols < table.getColumnCount(); cols++){
+                try{
+                    row.createCell(cols).setCellValue(model.getValueAt(rows, cols).toString());
+                }catch (NullPointerException e){
+                    row.createCell(cols).setCellValue("");
+                }
+            }
+
+            row = sheet.createRow((rows + 3));
+        }
+        try {
+            wb.write(new FileOutputStream("watch.xls"));//Save the file
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Exit Button
+     */
+    private void onExit(){
         dispose();
     }
 
-    public void onExit(){
-        dispose();
+    /**
+     * Edit Button
+     */
+    private void onEdit(){
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        model.addRow(new Object[]{"Column 1", "Column 2", "Column 3", "Column 4"});
     }
 
-    public void onEdit(){
-        dispose();
+    /**
+     * Opens the Default excel file
+     */
+    private void fillDefaultList(){
+        File defFile = null;
+        defFile = new File("watch.xls");
+        if (defFile != null) {
+            fillData(defFile);
+            model = new DefaultTableModel(data, headers);
+            tableWidth = model.getColumnCount() * 150;
+            tableHeight = model.getRowCount() * 25;
+            table.setPreferredSize(new Dimension( tableWidth, tableHeight));
+            table.setModel(model);
+
+        }
     }
 
+    /**
+     * Imports the data from the excel file to the JTable
+     *
+     * @param file
+     */
+    private void fillData(File file) {
+
+        HSSFWorkbook workbook = null;
+        FileInputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        if (file.getAbsolutePath().endsWith("xls")) {
+            // HSSFWorkbook, InputStream
+            try {
+                NPOIFSFileSystem fs = new NPOIFSFileSystem(inputStream);
+                workbook = new HSSFWorkbook(fs.getRoot(), true);
+                fs.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            //throw new IllegalArgumentException("The specified file is not Excel file");
+            JOptionPane.showMessageDialog(null,
+                    "Please select only Excel file. (.xls)",
+                    "Error",JOptionPane.ERROR_MESSAGE);
+        }
+
+        HSSFSheet sheet = workbook.getSheetAt(0);
+        HSSFRow row = sheet.getRow(0);
+
+        headers.clear();
+        for (int i = 0; i < 4; i++)
+        {
+            HSSFCell cell1 = row.getCell(i);
+            headers.add(cell1.toString());
+        }
+
+        data.clear();
+        for (int j = 1; j < sheet.getLastRowNum() + 1; j++)
+        {
+            Vector d = new Vector();
+            row=sheet.getRow(j);
+            if (isRowEmpty(row) == false){
+                int noofrows=row.getLastCellNum();
+                for (int i = 0; i < noofrows; i++)
+                {    //To handle empty excel cells
+                    HSSFCell cell=row.getCell(i,
+                            org.apache.poi.ss.usermodel.Row.CREATE_NULL_AS_BLANK );
+                    d.add(cell.toString());
+                }
+                d.add("\n");
+                data.add(d);
+
+            }
+        }
+    }
+
+    /**
+     * Checks if a row is Empty
+     *
+     * @param row
+     * @return
+     */
+    public static boolean isRowEmpty(Row row) {
+        if (row == null){
+            return true;
+        }
+        for (int c = row.getFirstCellNum(); c < row.getLastCellNum(); c++) {
+            Cell cell = row.getCell(c);
+            if (cell != null && cell.getCellType() != Cell.CELL_TYPE_BLANK)
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get the workbook of a file
+     *
+     * @param excelFilePath
+     * @return
+     * @throws IOException
+     */
     private Workbook getWorkbook(String excelFilePath)
             throws IOException {
 
@@ -119,61 +257,6 @@ public class form extends JFrame {
 
         return workbook;
     }
-
-    void fillData(File file) {
-
-        HSSFWorkbook workbook = null;
-        FileInputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        if (file.getAbsolutePath().endsWith("xls")) {
-            // HSSFWorkbook, InputStream
-            try {
-                NPOIFSFileSystem fs = new NPOIFSFileSystem(inputStream);
-                workbook = new HSSFWorkbook(fs.getRoot(), true);
-                fs.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        } else {
-            //throw new IllegalArgumentException("The specified file is not Excel file");
-            JOptionPane.showMessageDialog(null,
-                    "Please select only Excel file. (.xls)",
-                    "Error",JOptionPane.ERROR_MESSAGE);
-        }
-
-        HSSFSheet sheet = workbook.getSheetAt(0);
-        HSSFRow row=sheet.getRow(0);
-
-        headers.clear();
-        for (int i = 0; i < row.getLastCellNum(); i++)
-        {
-            HSSFCell cell1 = row.getCell(i);
-            headers.add(cell1.toString());
-        }
-
-        data.clear();
-        for (int j = 1; j < sheet.getLastRowNum() + 1; j++)
-        {
-            Vector d = new Vector();
-            row=sheet.getRow(j);
-            int noofrows=row.getLastCellNum();
-            for (int i = 0; i < noofrows; i++)
-            {    //To handle empty excel cells
-                HSSFCell cell=row.getCell(i,
-                        org.apache.poi.ss.usermodel.Row.CREATE_NULL_AS_BLANK );
-                d.add(cell.toString());
-            }
-            d.add("\n");
-            data.add(d);
-        }
-    }
-
-
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
