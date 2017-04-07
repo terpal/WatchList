@@ -91,7 +91,7 @@ public class form extends JFrame {
             headerRow.createCell(headings).setCellValue(model.getColumnName(headings));
         }
 
-        for(int rows = 0; rows < model.getRowCount() -1; rows++){
+        for(int rows = 0; rows < model.getRowCount() ; rows++){
             for(int cols = 0; cols < table.getColumnCount(); cols++){
                 try{
                     row.createCell(cols).setCellValue(model.getValueAt(rows, cols).toString());
@@ -104,6 +104,9 @@ public class form extends JFrame {
         }
         try {
             wb.write(new FileOutputStream("watch.xls"));//Save the file
+            JOptionPane.showMessageDialog(null,
+                    "The List was saved",
+                    "SAVE",JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -139,14 +142,17 @@ public class form extends JFrame {
     private void fillDefaultList(){
         File defFile = null;
         defFile = new File("watch.xls");
-        if (defFile != null) {
+        if(defFile.exists() && !defFile.isDirectory()) {
             fillData(defFile);
-            model = new DefaultTableModel(data, headers);
-            tableWidth = model.getColumnCount() * 150;
-            tableHeight = model.getRowCount() * 25;
-            table.setPreferredSize(new Dimension( tableWidth, tableHeight));
-            table.setModel(model);
+        }else{
+            createNewWorkbook();
         }
+
+        model = new DefaultTableModel(data, headers);
+        //tableWidth = model.getColumnCount() * 150;
+        //tableHeight = model.getRowCount() * 25;
+        //table.setPreferredSize(new Dimension( tableWidth, tableHeight));
+        table.setModel(model);
     }
 
     /**
@@ -161,7 +167,8 @@ public class form extends JFrame {
         try {
             inputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            createNewWorkbook();
+            //e.printStackTrace();
         }
         if (file.getAbsolutePath().endsWith("xls")) {
             // HSSFWorkbook, InputStream
@@ -208,6 +215,40 @@ public class form extends JFrame {
 
             }
         }
+
+
+    }
+
+    private void createNewWorkbook(){
+        Workbook wb = new HSSFWorkbook();
+        Sheet sheet = wb.createSheet("new sheet");
+
+        Row row = sheet.createRow((short)0);
+        Cell cell = row.createCell(0);
+        cell.setCellValue("Anime");
+        Cell cell1 = row.createCell(1);
+        cell1.setCellValue("Status");
+        Cell cell2 = row.createCell(2);
+        cell2.setCellValue("Comments");
+        Cell cell3 = row.createCell(3);
+        cell3.setCellValue("Rate");
+
+        // Write the output to a file
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream("watch.xls");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            wb.write(fileOut);
+            fileOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        File startFile = null;
+        startFile = new File("watch.xls");
+        fillData(startFile);
     }
 
     /**
