@@ -16,7 +16,12 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.*;
 import java.util.Vector;
 
@@ -54,8 +59,35 @@ public class form extends JFrame {
         buttonExit.addActionListener(actionEvent -> onExit());
         buttonImport.addActionListener(actionEvent -> onImport());
         buttonDelete.addActionListener(actionEvent -> onDelete());
+        searchButton.addActionListener(actionEvent -> onSearch());
+
+        SEARCHONTITLETextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                super.focusGained(e);
+                SEARCHONTITLETextField.setText("");
+            }
+        });
+
 
         fillDefaultList();
+    }
+
+
+    private void onSearch(){
+        TableModel model = table.getModel();
+        final TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
+        table.setRowSorter(sorter);
+
+        String text = SEARCHONTITLETextField.getText();
+        if (text.length() == 0) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" +  text)); // "(?i)" case insensitive
+            sorter.setSortKeys(null);
+
+        }
+
     }
 
     /**
