@@ -24,12 +24,15 @@ import java.util.Vector;
 public class form extends JFrame {
     private JPanel contentPanel;
     private JTable table;
-    private JTextField SEARCHTextField;
+    //private JTextField SEARCHTextField;
     private JButton buttonSave;
     private JButton ButtonEDIT;
     private JButton buttonExit;
     private JButton buttonImport;
     private JButton buttonDelete;
+    private JTextField SEARCHONTITLETextField;
+    private JButton searchButton;
+    private JLabel RowCount;
     private JFileChooser jChooser;
     private String path;
 
@@ -73,6 +76,7 @@ public class form extends JFrame {
             fillData(file);
             model = new DefaultTableModel(data, headers);
             table.setModel(model);
+            updateCountText();
         }
     }
 
@@ -125,6 +129,7 @@ public class form extends JFrame {
     private void onEdit(){
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.addRow(new Object[]{"Column 1", "Column 2", "Column 3", "Column 4"});
+        updateCountText();
     }
 
     /**
@@ -134,6 +139,7 @@ public class form extends JFrame {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         int deleteRow = table.getSelectedRow();
         model.removeRow(deleteRow);
+        updateCountText();
     }
 
     /**
@@ -153,6 +159,7 @@ public class form extends JFrame {
         //tableHeight = model.getRowCount() * 25;
         //table.setPreferredSize(new Dimension( tableWidth, tableHeight));
         table.setModel(model);
+        updateCountText();
     }
 
     /**
@@ -167,8 +174,8 @@ public class form extends JFrame {
         try {
             inputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            createNewWorkbook();
-            //e.printStackTrace();
+            //createNewWorkbook();
+            e.printStackTrace();
         }
         if (file.getAbsolutePath().endsWith("xls")) {
             // HSSFWorkbook, InputStream
@@ -249,6 +256,11 @@ public class form extends JFrame {
         File startFile = null;
         startFile = new File("watch.xls");
         fillData(startFile);
+    }
+
+    private void updateCountText(){
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        RowCount.setText("Num: " + String.valueOf(model.getRowCount()));
     }
 
     /**
