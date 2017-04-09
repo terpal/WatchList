@@ -29,17 +29,19 @@ import java.util.Vector;
 public class form extends JFrame {
     private JPanel contentPanel;
     private JTable table;
-    //private JTextField SEARCHTextField;
     private JButton buttonSave;
     private JButton ButtonEDIT;
     private JButton buttonExit;
-    private JButton buttonImport;
     private JButton buttonDelete;
     private JTextField SEARCHONTITLETextField;
     private JButton searchButton;
     private JLabel RowCount;
     private JFileChooser jChooser;
     private String path;
+    private JMenuItem newMenuItem ;
+    private JMenuItem importMenuItem ;
+    private JMenuItem exportMenuItem ;
+
 
     // contains table Column
     static Vector headers = new Vector();
@@ -47,19 +49,27 @@ public class form extends JFrame {
     static Vector data = new Vector();
     // Model is used to construct
     DefaultTableModel model = null;
-    static int tableWidth = 0;
-    static int tableHeight = 0;
+
 
 
     public form() throws IOException {
+        initUI();
+    }
+
+    private void initUI(){
         setContentPane(contentPanel);
 
+        table.setAutoCreateRowSorter(true);
+
+        createMenuBar();
         buttonSave.addActionListener(actionEvent -> onSave());
         ButtonEDIT.addActionListener(actionEvent -> onEdit());
         buttonExit.addActionListener(actionEvent -> onExit());
-        buttonImport.addActionListener(actionEvent -> onImport());
+        //buttonImport.addActionListener(actionEvent -> onImport());
         buttonDelete.addActionListener(actionEvent -> onDelete());
         searchButton.addActionListener(actionEvent -> onSearch());
+        importMenuItem.addActionListener(ActionListener -> onImport());
+        exportMenuItem.addActionListener(ActionListener -> onExport());
 
         SEARCHONTITLETextField.addFocusListener(new FocusAdapter() {
             @Override
@@ -71,8 +81,31 @@ public class form extends JFrame {
 
 
         fillDefaultList();
+
     }
 
+    private void createMenuBar() {
+
+        JMenuBar menuBar = new JMenuBar();
+
+        // Menu File / About
+        JMenu fileMenu = new JMenu("File");
+        JMenu aboutMenu = new JMenu("About");
+
+        menuBar.add(fileMenu);
+        menuBar.add(aboutMenu);
+
+        // File->New / Import / Export
+        newMenuItem = new JMenuItem("New");
+        importMenuItem = new JMenuItem("Import");
+        exportMenuItem = new JMenuItem("Export");
+        fileMenu.add(newMenuItem);
+        fileMenu.add(importMenuItem);
+        fileMenu.add(exportMenuItem);
+
+
+        setJMenuBar(menuBar);
+    }
 
     private void onSearch(){
         TableModel model = table.getModel();
@@ -87,7 +120,6 @@ public class form extends JFrame {
             sorter.setSortKeys(null);
 
         }
-
     }
 
     /**
@@ -112,10 +144,38 @@ public class form extends JFrame {
         }
     }
 
+    private void onExport(){
+        jChooser = new JFileChooser();
+        jChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+        //jChooser.getChoosableFileFilters();
+        jChooser.setFileFilter(new FileNameExtensionFilter("MS" , "xls"));
+        //jChooser.s
+        int retval = jChooser.showSaveDialog(exportMenuItem);
+
+        if (retval == JFileChooser.APPROVE_OPTION) {
+
+            File file = jChooser.getSelectedFile();
+            path = file.getAbsolutePath();
+            if (file != null) {
+                if (path.endsWith(".xls")){
+
+                }else{
+                    path += ".xls";
+                }
+                Save(path);
+            }
+        }
+
+    }
+
     /**
      * Save Button
      */
     private void onSave(){
+        Save("watch.xls");
+    }
+
+    private void Save(String savePath){
         new WorkbookFactory();
         Workbook wb = new HSSFWorkbook();
         Sheet sheet = wb.createSheet();
@@ -139,13 +199,14 @@ public class form extends JFrame {
             row = sheet.createRow((rows + 3));
         }
         try {
-            wb.write(new FileOutputStream("watch.xls"));//Save the file
+            wb.write(new FileOutputStream(savePath));//Save the file
             JOptionPane.showMessageDialog(null,
                     "The List was saved",
                     "SAVE",JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     /**
@@ -187,9 +248,6 @@ public class form extends JFrame {
         }
 
         model = new DefaultTableModel(data, headers);
-        //tableWidth = model.getColumnCount() * 150;
-        //tableHeight = model.getRowCount() * 25;
-        //table.setPreferredSize(new Dimension( tableWidth, tableHeight));
         table.setModel(model);
         updateCountText();
     }
@@ -361,7 +419,6 @@ public class form extends JFrame {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             ex.pack();
             ex.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             ex.setVisible(true);
