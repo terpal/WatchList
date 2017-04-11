@@ -14,15 +14,15 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 
 
@@ -53,6 +53,7 @@ public class form extends JFrame {
 
 
     public form() throws IOException {
+        Deserialize();
         initUI();
     }
 
@@ -70,7 +71,7 @@ public class form extends JFrame {
         searchButton.addActionListener(actionEvent -> onSearch());
         importMenuItem.addActionListener(ActionListener -> onImport());
         exportMenuItem.addActionListener(ActionListener -> onExport());
-
+        newMenuItem.addActionListener(ActionListener -> onNew());
         SEARCHONTITLETextField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -78,10 +79,7 @@ public class form extends JFrame {
                 SEARCHONTITLETextField.setText("");
             }
         });
-
-
         fillDefaultList();
-
     }
 
     private void createMenuBar() {
@@ -107,6 +105,26 @@ public class form extends JFrame {
         setJMenuBar(menuBar);
     }
 
+    private void onNew(){
+        String s = (String)JOptionPane.showInputDialog(
+                this,
+                "Enter Name of the WatchList",
+                "Create New WatchList",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                null);
+
+        if (s != "" && s!= null){
+            s += ".xls";
+            createNewWorkbook(s);
+
+            File file = null;
+            file = new File(s);
+            fillData(file);
+        }
+    }
+
     private void onSearch(){
         TableModel model = table.getModel();
         final TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
@@ -129,7 +147,7 @@ public class form extends JFrame {
     private void onImport(){
         jChooser = new JFileChooser();
         jChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-        jChooser.addChoosableFileFilter(new FileNameExtensionFilter("MS Office Documents", "xls", "xlsx"));
+        jChooser.setFileFilter(new FileNameExtensionFilter("MS excel file" , "xls"));
         jChooser.showOpenDialog(null);
 
         File file = jChooser.getSelectedFile();
@@ -137,10 +155,8 @@ public class form extends JFrame {
 
         }else {
             path = file.getAbsolutePath();
+            Serialize();
             fillData(file);
-            model = new DefaultTableModel(data, headers);
-            table.setModel(model);
-            updateCountText();
         }
     }
 
@@ -172,7 +188,7 @@ public class form extends JFrame {
      * Save Button
      */
     private void onSave(){
-        Save("watch.xls");
+        Save(path);
     }
 
     private void Save(String savePath){
@@ -221,7 +237,7 @@ public class form extends JFrame {
      */
     private void onEdit(){
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.addRow(new Object[]{"Column 1", "Column 2", "Column 3", "Column 4"});
+        model.addRow(new Object[]{"Title", "Status", "Comments", "Rate"});
         updateCountText();
     }
 
@@ -236,20 +252,20 @@ public class form extends JFrame {
     }
 
     /**
-     * Opens the Default excel file
+     * Opens the Default / Last Used excel file
      */
     private void fillDefaultList(){
+        String name = path;
         File defFile = null;
-        defFile = new File("watch.xls");
+        defFile = new File(name);
         if(defFile.exists() && !defFile.isDirectory()) {
             fillData(defFile);
         }else{
-            createNewWorkbook();
+            JOptionPane.showMessageDialog(null,
+                    "You must create a new WatchList.",
+                    "Info",JOptionPane.INFORMATION_MESSAGE);
+            onNew();
         }
-
-        model = new DefaultTableModel(data, headers);
-        table.setModel(model);
-        updateCountText();
     }
 
     /**
@@ -264,7 +280,6 @@ public class form extends JFrame {
         try {
             inputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            //createNewWorkbook();
             e.printStackTrace();
         }
         if (file.getAbsolutePath().endsWith("xls")) {
@@ -313,16 +328,31 @@ public class form extends JFrame {
             }
         }
 
+        model = new DefaultTableModel(data, headers);
+        table.setModel(model);
+        updateCountText();
+
+        ArrayList dataStatus = new ArrayList();
+        int colStatus = 1;     // Status
+        dataStatus.add("ongoing");
+        dataStatus.add("completed");
+        dataStatus.add("to watch");
+        setComboBox(colStatus,dataStatus);
+
+        ArrayList dataRate = new ArrayList();
+        int colRate = 3;     // Rate
+        dataRate.addAll(Arrays.asList("1", "2", "3","4","5","6","7","8","9","10"));
+        setComboBox(colRate,dataRate);
 
     }
 
-    private void createNewWorkbook(){
+    private void createNewWorkbook(String name){
         Workbook wb = new HSSFWorkbook();
         Sheet sheet = wb.createSheet("new sheet");
 
         Row row = sheet.createRow((short)0);
         Cell cell = row.createCell(0);
-        cell.setCellValue("Anime");
+        cell.setCellValue("Title");
         Cell cell1 = row.createCell(1);
         cell1.setCellValue("Status");
         Cell cell2 = row.createCell(2);
@@ -333,24 +363,38 @@ public class form extends JFrame {
         // Write the output to a file
         FileOutputStream fileOut = null;
         try {
-            fileOut = new FileOutputStream("watch.xls");
+            fileOut = new FileOutputStream(name);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         try {
             wb.write(fileOut);
             fileOut.close();
+            path = name;
+            Serialize();
         } catch (IOException e) {
             e.printStackTrace();
         }
         File startFile = null;
-        startFile = new File("watch.xls");
+        startFile = new File(name);
         fillData(startFile);
     }
 
     private void updateCountText(){
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        RowCount.setText("Num: " + String.valueOf(model.getRowCount()));
+        RowCount.setText("Count: " + String.valueOf(model.getRowCount()));
+    }
+
+    private void setComboBox(int column, ArrayList data){
+        TableColumnModel columnModel = table.getColumnModel();
+        TableColumn xColumn = columnModel.getColumn(column);
+        JComboBox comboBox = new JComboBox();
+
+        for (int i =0 ; i < data.size(); i++){
+            comboBox.addItem(data.get(i));
+        }
+
+        xColumn.setCellEditor(new DefaultCellEditor(comboBox));
     }
 
     /**
@@ -370,6 +414,42 @@ public class form extends JFrame {
         }
         return true;
     }
+
+    /**
+     * Saves the Last Used File Path
+     */
+    private void Serialize(){
+
+        try {
+            FileOutputStream fileOut =
+                    new FileOutputStream("/tmp/lastUsedFile.ser");
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(path);
+            out.close();
+            fileOut.close();
+            System.out.printf("Serialized data is saved in /tmp/employee.ser");
+        }catch(IOException i) {
+            i.printStackTrace();
+        }
+    }
+
+    /**
+     *  Restores the Last Used File Path
+     */
+    private void Deserialize() {
+        try {
+            FileInputStream fileIn = new FileInputStream("/tmp/lastUsedFile.ser");
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            path = (String) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (IOException i) {
+            i.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * Get the workbook of a file
