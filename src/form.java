@@ -110,7 +110,7 @@ public class form extends JFrame {
                 this,
                 "Enter Name of the WatchList",
                 "Create New WatchList",
-                JOptionPane.PLAIN_MESSAGE,
+                JOptionPane.INFORMATION_MESSAGE,
                 null,
                 null,
                 null);
@@ -122,6 +122,8 @@ public class form extends JFrame {
             File file = null;
             file = new File(s);
             fillData(file);
+        }else {
+            System.exit(0);
         }
     }
 
@@ -256,10 +258,16 @@ public class form extends JFrame {
      */
     private void fillDefaultList(){
         String name = path;
-        File defFile = null;
-        defFile = new File(name);
-        if(defFile.exists() && !defFile.isDirectory()) {
-            fillData(defFile);
+        if (name != null){
+            File defFile = new File(name);
+            if(defFile.exists() && !defFile.isDirectory()) {
+                fillData(defFile);
+            }else{
+                JOptionPane.showMessageDialog(null,
+                        "You must create a new WatchList.",
+                        "Info",JOptionPane.INFORMATION_MESSAGE);
+                onNew();
+            }
         }else{
             JOptionPane.showMessageDialog(null,
                     "You must create a new WatchList.",
@@ -438,7 +446,8 @@ public class form extends JFrame {
      */
     private void Deserialize() {
         try {
-            FileInputStream fileIn = new FileInputStream("/tmp/lastUsedFile.ser");
+            FileInputStream fileIn = null;
+            fileIn = new FileInputStream("/tmp/lastUsedFile.ser");
             ObjectInputStream in = new ObjectInputStream(fileIn);
             path = (String) in.readObject();
             in.close();
