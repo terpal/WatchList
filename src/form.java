@@ -345,6 +345,7 @@ public class form extends JFrame {
         dataStatus.add("ongoing");
         dataStatus.add("completed");
         dataStatus.add("to watch");
+        dataStatus.add("stopped");
         setComboBox(colStatus,dataStatus);
 
         ArrayList dataRate = new ArrayList();
@@ -430,12 +431,11 @@ public class form extends JFrame {
 
         try {
             FileOutputStream fileOut =
-                    new FileOutputStream("/tmp/lastUsedFile.ser");
+                    new FileOutputStream("lastUsedFile.ser");
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
             out.writeObject(path);
             out.close();
             fileOut.close();
-            System.out.printf("Serialized data is saved in /tmp/employee.ser");
         }catch(IOException i) {
             i.printStackTrace();
         }
@@ -447,7 +447,7 @@ public class form extends JFrame {
     private void Deserialize() {
         try {
             FileInputStream fileIn = null;
-            fileIn = new FileInputStream("/tmp/lastUsedFile.ser");
+            fileIn = new FileInputStream("lastUsedFile.ser");
             ObjectInputStream in = new ObjectInputStream(fileIn);
             path = (String) in.readObject();
             in.close();
