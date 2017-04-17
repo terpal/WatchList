@@ -13,10 +13,11 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -41,6 +42,7 @@ public class form extends JFrame {
     private JMenuItem newMenuItem ;
     private JMenuItem importMenuItem ;
     private JMenuItem exportMenuItem ;
+    private JMenuItem aboutMenuItem;
 
 
     // contains table Column
@@ -53,7 +55,8 @@ public class form extends JFrame {
 
 
     public form() throws IOException {
-        Deserialize();
+        StoreRestore store = new StoreRestore();
+        path = store.Deserialize();
         initUI();
     }
 
@@ -72,6 +75,7 @@ public class form extends JFrame {
         importMenuItem.addActionListener(ActionListener -> onImport());
         exportMenuItem.addActionListener(ActionListener -> onExport());
         newMenuItem.addActionListener(ActionListener -> onNew());
+        aboutMenuItem.addActionListener(ActionListener -> onAbout());
         SEARCHONTITLETextField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -88,10 +92,10 @@ public class form extends JFrame {
 
         // Menu File / About
         JMenu fileMenu = new JMenu("File");
-        JMenu aboutMenu = new JMenu("About");
+        JMenu helpMenu = new JMenu("Help");
 
         menuBar.add(fileMenu);
-        menuBar.add(aboutMenu);
+        menuBar.add(helpMenu);
 
         // File->New / Import / Export
         newMenuItem = new JMenuItem("New");
@@ -101,8 +105,19 @@ public class form extends JFrame {
         fileMenu.add(importMenuItem);
         fileMenu.add(exportMenuItem);
 
+        aboutMenuItem = new JMenuItem("About");
+        helpMenu.add(aboutMenuItem);
+
+        //helpMenu.addActionListener(ActionListener -> onAbout());
 
         setJMenuBar(menuBar);
+    }
+
+    private void onAbout(){
+
+
+        AboutDialog aboutDialog = new AboutDialog();
+        aboutDialog.setVisible(true);
     }
 
     private void onNew(){
@@ -157,7 +172,8 @@ public class form extends JFrame {
 
         }else {
             path = file.getAbsolutePath();
-            Serialize();
+            StoreRestore store = new StoreRestore();
+            store.Serialize(path);
             fillData(file);
         }
     }
@@ -380,7 +396,8 @@ public class form extends JFrame {
             wb.write(fileOut);
             fileOut.close();
             path = name;
-            Serialize();
+            StoreRestore store = new StoreRestore();
+            store.Serialize(path);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -424,9 +441,11 @@ public class form extends JFrame {
         return true;
     }
 
+
+
     /**
      * Saves the Last Used File Path
-     */
+
     private void Serialize(){
 
         try {
@@ -443,7 +462,7 @@ public class form extends JFrame {
 
     /**
      *  Restores the Last Used File Path
-     */
+
     private void Deserialize() {
         try {
             FileInputStream fileIn = null;
@@ -458,7 +477,7 @@ public class form extends JFrame {
             e.printStackTrace();
         }
     }
-
+    */
 
     /**
      * Get the workbook of a file
@@ -508,8 +527,11 @@ public class form extends JFrame {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            ex.pack();
+            ImageIcon img = new ImageIcon("icons/list32.png");
+            ex.setIconImage(img.getImage());
             ex.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            ex.setTitle("WatchList");
+            ex.pack();
             ex.setVisible(true);
         });
 
