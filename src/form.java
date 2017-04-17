@@ -13,12 +13,9 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.*;
@@ -87,7 +84,6 @@ public class form extends JFrame {
     }
 
     private void createMenuBar() {
-
         JMenuBar menuBar = new JMenuBar();
 
         // Menu File / About
@@ -108,14 +104,10 @@ public class form extends JFrame {
         aboutMenuItem = new JMenuItem("About");
         helpMenu.add(aboutMenuItem);
 
-        //helpMenu.addActionListener(ActionListener -> onAbout());
-
         setJMenuBar(menuBar);
     }
 
     private void onAbout(){
-
-
         AboutDialog aboutDialog = new AboutDialog();
         aboutDialog.setVisible(true);
     }
@@ -209,6 +201,10 @@ public class form extends JFrame {
         Save(path);
     }
 
+    /**
+     * Save the table in excel
+     * @param savePath
+     */
     private void Save(String savePath){
         new WorkbookFactory();
         Workbook wb = new HSSFWorkbook();
@@ -294,7 +290,6 @@ public class form extends JFrame {
 
     /**
      * Imports the data from the excel file to the JTable
-     *
      * @param file
      */
     private void fillData(File file) {
@@ -371,6 +366,10 @@ public class form extends JFrame {
 
     }
 
+    /**
+     * Creates a new WatchList
+     * @param name
+     */
     private void createNewWorkbook(String name){
         Workbook wb = new HSSFWorkbook();
         Sheet sheet = wb.createSheet("new sheet");
@@ -406,6 +405,7 @@ public class form extends JFrame {
         fillData(startFile);
     }
 
+
     private void updateCountText(){
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         RowCount.setText("Count: " + String.valueOf(model.getRowCount()));
@@ -419,7 +419,6 @@ public class form extends JFrame {
         for (int i =0 ; i < data.size(); i++){
             comboBox.addItem(data.get(i));
         }
-
         xColumn.setCellEditor(new DefaultCellEditor(comboBox));
     }
 
@@ -440,44 +439,6 @@ public class form extends JFrame {
         }
         return true;
     }
-
-
-
-    /**
-     * Saves the Last Used File Path
-
-    private void Serialize(){
-
-        try {
-            FileOutputStream fileOut =
-                    new FileOutputStream("lastUsedFile.ser");
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(path);
-            out.close();
-            fileOut.close();
-        }catch(IOException i) {
-            i.printStackTrace();
-        }
-    }
-
-    /**
-     *  Restores the Last Used File Path
-
-    private void Deserialize() {
-        try {
-            FileInputStream fileIn = null;
-            fileIn = new FileInputStream("lastUsedFile.ser");
-            ObjectInputStream in = new ObjectInputStream(fileIn);
-            path = (String) in.readObject();
-            in.close();
-            fileIn.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-    */
 
     /**
      * Get the workbook of a file
@@ -534,9 +495,5 @@ public class form extends JFrame {
             ex.pack();
             ex.setVisible(true);
         });
-
     }
-
 }
-
-
