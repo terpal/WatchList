@@ -261,7 +261,7 @@ public class form extends JFrame {
     private void onDelete(){
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         int deleteRow = table.getSelectedRow();
-        model.removeRow(deleteRow);
+        model.removeRow(table.convertRowIndexToModel(deleteRow));
         updateCountText();
     }
 
